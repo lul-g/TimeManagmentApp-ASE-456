@@ -1,6 +1,5 @@
-# time_app
+# Time Managment App: ASE-456
 
-A new Flutter project.
 
 ## Getting Started
 
