@@ -1,0 +1,168 @@
+{
+  "header": {
+    "cloc_url": "github.com/AlDanial/cloc",
+    "cloc_version": "1.98",
+    "elapsed_seconds": 10.3150210380554,
+    "n_files": 375,
+    "n_lines": 25312,
+    "files_per_second": 36.3547489255237,
+    "lines_per_second": 2453.89707947428,
+    "report_file": "progress/LA/2023-12-05.json"
+  },
+  "JSON": {
+    "nFiles": 118,
+    "blank": 0,
+    "comment": 0,
+    "code": 13578
+  },
+  "XML": {
+    "nFiles": 145,
+    "blank": 222,
+    "comment": 73,
+    "code": 3866
+  },
+  "Text": {
+    "nFiles": 25,
+    "blank": 0,
+    "comment": 0,
+    "code": 3545
+  },
+  "Dart": {
+    "nFiles": 17,
+    "blank": 125,
+    "comment": 40,
+    "code": 1320
+  },
+  "C++": {
+    "nFiles": 8,
+    "blank": 115,
+    "comment": 56,
+    "code": 437
+  },
+  "CMake": {
+    "nFiles": 8,
+    "blank": 81,
+    "comment": 109,
+    "code": 356
+  },
+  "GLSL": {
+    "nFiles": 1,
+    "blank": 0,
+    "comment": 0,
+    "code": 160
+  },
+  "Bourne Again Shell": {
+    "nFiles": 1,
+    "blank": 19,
+    "comment": 20,
+    "code": 121
+  },
+  "C/C++ Header": {
+    "nFiles": 9,
+    "blank": 57,
+    "comment": 69,
+    "code": 112
+  },
+  "Gradle": {
+    "nFiles": 3,
+    "blank": 19,
+    "comment": 5,
+    "code": 94
+  },
+  "Java": {
+    "nFiles": 6,
+    "blank": 8,
+    "comment": 26,
+    "code": 69
+  },
+  "Windows Resource File": {
+    "nFiles": 1,
+    "blank": 23,
+    "comment": 29,
+    "code": 69
+  },
+  "DOS Batch": {
+    "nFiles": 1,
+    "blank": 24,
+    "comment": 2,
+    "code": 64
+  },
+  "Swift": {
+    "nFiles": 6,
+    "blank": 14,
+    "comment": 7,
+    "code": 56
+  },
+  "HTML": {
+    "nFiles": 1,
+    "blank": 8,
+    "comment": 13,
+    "code": 38
+  },
+  "Markdown": {
+    "nFiles": 3,
+    "blank": 15,
+    "comment": 0,
+    "code": 37
+  },
+  "YAML": {
+    "nFiles": 2,
+    "blank": 11,
+    "comment": 22,
+    "code": 37
+  },
+  "Objective-C": {
+    "nFiles": 1,
+    "blank": 9,
+    "comment": 4,
+    "code": 29
+  },
+  "Properties": {
+    "nFiles": 9,
+    "blank": 0,
+    "comment": 4,
+    "code": 29
+  },
+  "Bourne Shell": {
+    "nFiles": 2,
+    "blank": 0,
+    "comment": 2,
+    "code": 23
+  },
+  "Kotlin": {
+    "nFiles": 1,
+    "blank": 2,
+    "comment": 0,
+    "code": 4
+  },
+  "SQL": {
+    "nFiles": 2,
+    "blank": 0,
+    "comment": 0,
+    "code": 4
+  },
+  "D": {
+    "nFiles": 3,
+    "blank": 0,
+    "comment": 0,
+    "code": 3
+  },
+  "CSS": {
+    "nFiles": 1,
+    "blank": 0,
+    "comment": 13,
+    "code": 1
+  },
+  "JavaScript": {
+    "nFiles": 1,
+    "blank": 0,
+    "comment": 13,
+    "code": 1
+  },
+  "SUM": {
+    "blank": 752,
+    "comment": 507,
+    "code": 24053,
+    "nFiles": 375
+  }
+}
