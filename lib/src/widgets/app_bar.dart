@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:time_app/src/services/FirebaseUtils.dart';
+import 'package:time_app/src/models/record.dart';
+import 'package:time_app/src/services/FirebaseService.dart';
 import 'package:time_app/src/utils/constants.dart';
-import 'package:time_app/src/utils/custom_toast.dart';
+import 'package:time_app/src/services/ToastService.dart';
 import 'package:time_app/src/widgets/add_record.dart';
 import 'package:time_app/src/widgets/calendar.dart';
 
 class CustomAppBar extends StatelessWidget {
   final Function onSearch;
   final Function updateRecordList;
-  final Function initRecordsList;
+  final Function getRecords;
 
   final TextEditingController _searchController = TextEditingController();
 
@@ -17,7 +18,7 @@ class CustomAppBar extends StatelessWidget {
     super.key,
     required this.onSearch,
     required this.updateRecordList,
-    required this.initRecordsList,
+    required this.getRecords,
   });
 
   @override
@@ -27,8 +28,8 @@ class CustomAppBar extends StatelessWidget {
     return Center(
       child: Container(
         width: isMobile ? MediaQuery.of(context).size.width : 600,
-        height: isMobile ? 200 : 80.0,
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+        color: KThemeColors.secondary,
         child: isMobile
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -38,8 +39,8 @@ class CustomAppBar extends StatelessWidget {
                     children: [
                       const Logo(),
                       PopupMenu(
-                        initRecordsList: initRecordsList,
-                        updateRecordList: updateRecordList,
+                        getRecords: getRecords,
+                        updateRecords: updateRecordList,
                       )
                     ],
                   ),
@@ -53,8 +54,8 @@ class CustomAppBar extends StatelessWidget {
                 const Logo(),
                 SearchBar(controller: _searchController, onSearch: onSearch),
                 PopupMenu(
-                  initRecordsList: initRecordsList,
-                  updateRecordList: updateRecordList,
+                  getRecords: getRecords,
+                  updateRecords: updateRecordList,
                 )
               ]),
       ),
@@ -100,17 +101,19 @@ class SearchBar extends StatelessWidget {
   final Function onSearch;
   final TextEditingController controller;
 
-  const SearchBar({required this.controller, required this.onSearch});
+  const SearchBar({
+    super.key,
+    required this.controller,
+    required this.onSearch,
+  });
 
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     bool isMobile = screenWidth <= 600;
     return Container(
-      height: isMobile ? 35 : 50,
-      padding: isMobile
-          ? const EdgeInsets.fromLTRB(15, 0, 0, 3)
-          : const EdgeInsets.all(8.0),
+      height: 50,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
         color: KThemeColors.primary,
         borderRadius: isMobile
@@ -137,7 +140,9 @@ class SearchBar extends StatelessWidget {
                 if (value.isNotEmpty) {
                   onSearch(value);
                 } else {
-                  ToastManager.showWarning('⚠ Please enter a keyword');
+                  onSearch('');
+                  ToastService.showWarning(
+                      '⚠ No keyword entered! Fetching all records.');
                 }
               },
               decoration: const InputDecoration(
@@ -157,17 +162,24 @@ class SearchBar extends StatelessWidget {
 }
 
 class PopupMenu extends StatelessWidget {
-  final Function initRecordsList;
-  final Function updateRecordList;
+  final Function getRecords;
+  final Function updateRecords;
 
   const PopupMenu({
-    required this.initRecordsList,
-    required this.updateRecordList,
+    required this.getRecords,
+    required this.updateRecords,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
+    Map<String, int> choices = {
+      'Add': 0,
+      'Calendar': 1,
+      'OrderBy Priority': 2,
+      'App-Description': 3,
+      'Reset': 4,
+    };
     return PopupMenuButton<String>(
       icon: const FaIcon(
         FontAwesomeIcons.ellipsisV,
@@ -179,26 +191,33 @@ class PopupMenu extends StatelessWidget {
       surfaceTintColor: KThemeColors.secondary,
       color: KThemeColors.primary,
       itemBuilder: (BuildContext context) {
-        return {'Reset', 'Add', 'Calendar'}.map((String choice) {
-          return PopupMenuItem<String>(
-            value: choice,
-            child: Row(
-              children: [
-                choice == 'Add'
-                    ? const FaIcon(FontAwesomeIcons.plusCircle)
-                    : choice == 'Calendar'
-                        ? const FaIcon(FontAwesomeIcons.calendarDay)
-                        : const FaIcon(FontAwesomeIcons.refresh),
-                const SizedBox(width: 8),
-                Text(choice),
-              ],
+        List<PopupMenuEntry<String>> menuItems = [];
+
+        choices.entries.forEach((entry) {
+          String choice = entry.key;
+          int index = entry.value;
+          menuItems.add(
+            PopupMenuItem<String>(
+              value: choice,
+              child: Row(
+                children: [
+                  assignIcon(choice)!,
+                  const SizedBox(width: 8),
+                  Text(choice),
+                ],
+              ),
             ),
           );
-        }).toList();
+          if (index == 2) {
+            menuItems.add(const PopupMenuDivider());
+          }
+        });
+
+        return menuItems;
       },
-      onSelected: (String choice) {
+      onSelected: (String choice) async {
         if (choice == 'Add') {
-          _showAddRecordModal(context);
+          _showAddRecordModal(context, updateRecords, getRecords);
         } else if (choice == 'Calendar') {
           showDialog(
             context: context,
@@ -207,24 +226,172 @@ class PopupMenu extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: KThemeBorderRadius.borderRadius_md,
                 ),
-                child: CalendarTableView(updateRecordList: updateRecordList),
+                child: CalendarTableView(updateRecords: updateRecords),
               );
             },
           );
         } else if (choice == "Reset") {
-          initRecordsList();
-          FirebaseUtils.fetchRecordsByDate(DateTime.now());
+          updateRecords(await FirebaseService.fetchAllRecords());
+        } else if (choice == "OrderBy Priority") {
+          updateRecords(Record.sortByPriority(getRecords()));
+        } else if (choice == 'App-Description') {
+          _showDescriptionDialog(context);
         }
       },
     );
   }
 }
 
-void _showAddRecordModal(BuildContext context) {
-  showModalBottomSheet(
+FaIcon? assignIcon(String option) {
+  switch (option) {
+    case 'Add':
+      return const FaIcon(FontAwesomeIcons.plusCircle);
+    case 'Calendar':
+      return const FaIcon(FontAwesomeIcons.calendarDay);
+    case 'Reset':
+      return const FaIcon(FontAwesomeIcons.refresh);
+    case 'OrderBy Priority':
+      return const FaIcon(FontAwesomeIcons.sort);
+    case 'App-Description':
+      return const FaIcon(FontAwesomeIcons.circleInfo);
+  }
+  return null;
+}
+
+void _showAddRecordModal(
+    BuildContext context, Function updateRecords, Function getRecords) {
+  bool isMobile = MediaQuery.of(context).size.width <= 600;
+  isMobile
+      ? showBottomSheet(
+          context: context,
+          builder: (BuildContext context) {
+            return AddRecord(
+              updateRecords: updateRecords,
+              getRecords: getRecords,
+            );
+          },
+        )
+      : showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: KThemeBorderRadius.borderRadius_md,
+              ),
+              child: AddRecord(
+                updateRecords: updateRecords,
+                getRecords: getRecords,
+              ),
+            );
+          },
+        );
+}
+
+void _showDescriptionDialog(BuildContext context) {
+  const TextStyle sentenceStyle = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.normal,
+    color: KThemeColors.teritiary,
+  );
+  const TextStyle leadingStyle = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.bold,
+    color: Colors.red, // Red color for emphasis
+  );
+  showDialog(
     context: context,
     builder: (BuildContext context) {
-      return AddRecord();
+      return Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: KThemeBorderRadius.borderRadius_sm,
+        ),
+        child: SingleChildScrollView(
+          child: Container(
+              width: MediaQuery.of(context).size.width < 600
+                  ? MediaQuery.of(context).size.width
+                  : MediaQuery.of(context).size.width / 3,
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: KThemeColors.primary,
+                borderRadius: KThemeBorderRadius.borderRadius_sm,
+                border: KThemeBorders.border_md,
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                      child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      FaIcon(
+                        FontAwesomeIcons.circleInfo,
+                        color: Colors.blueAccent,
+                      ),
+                      SizedBox(
+                        width: 5,
+                      ),
+                      Text(
+                        'Time Forge',
+                        style: TextStyle(
+                          fontSize: 25,
+                          fontWeight: FontWeight.bold,
+                          color: KThemeColors.secondary,
+                        ),
+                      ),
+                    ],
+                  )),
+                  SizedBox(height: 15),
+                  Text(
+                    'How To Search',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: KThemeColors.secondary,
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'Start with the filter type. The following are the supported search types and their queries:',
+                    style: sentenceStyle,
+                  ),
+                  SizedBox(height: 10),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Text('1. DATE:', style: leadingStyle),
+                    title: Text(
+                        '- mm/dd/yyyy or mm-dd-yyyy - use to search by date',
+                        style: sentenceStyle),
+                  ),
+                  ListTile(
+                    leading: Text('2. KEY: or just the search text',
+                        style: leadingStyle),
+                    contentPadding: EdgeInsets.zero,
+                    title:
+                        Text('- use to search by title', style: sentenceStyle),
+                  ),
+                  ListTile(
+                    leading: Text('3. RANGE:', style: leadingStyle),
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                        '- date.1 - date.2 - use to search by date range. both - and / formats supported',
+                        style: sentenceStyle),
+                  ),
+                  ListTile(
+                    leading: Text('4. #[tagName1], #[tagName2], ...',
+                        style: leadingStyle),
+                    contentPadding: EdgeInsets.zero,
+                    title: Text('Include # before tag names to search by',
+                        style: sentenceStyle),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'Note: You can also use our integrated calendar to search by date. Also include the `:` incase it was not clear.',
+                    style: sentenceStyle,
+                  ),
+                ],
+              )),
+        ),
+      );
     },
   );
 }

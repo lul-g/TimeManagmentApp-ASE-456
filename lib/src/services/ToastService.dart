@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:time_app/src/utils/constants.dart';
 
-class ToastManager {
+class ToastService {
   static void showSuccess(String message) {
     Fluttertoast.showToast(
       msg: message,

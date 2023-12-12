@@ -1,40 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:time_app/src/models/record.dart';
-import 'package:time_app/src/services/ColorUtils.dart';
-import 'package:time_app/src/services/FirebaseUtils.dart';
-import 'package:time_app/src/services/TimeUtils.dart';
+import 'package:time_app/src/services/FirebaseService.dart';
+import 'package:time_app/src/utils/constants.dart';
+import 'package:time_app/src/services/TimeService.dart';
 
 class AddRecord extends StatefulWidget {
+  final Function updateRecords;
+  final Function getRecords;
+  const AddRecord({
+    super.key,
+    required this.updateRecords,
+    required this.getRecords,
+  });
+
   @override
-  _AddRecordState createState() => _AddRecordState();
+  State<AddRecord> createState() => _AddRecordState();
 }
 
 class _AddRecordState extends State<AddRecord> {
   final TextEditingController titleController = TextEditingController();
-  final TextEditingController slotController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
   final TextEditingController tagsController = TextEditingController();
 
   DateTime selectedDate = DateTime.now();
-  TimeOfDay selectedTime = TimeOfDay.now();
+  TimeOfDay selectedFrom = TimeOfDay.now();
+  TimeOfDay selectedTo = TimeOfDay.now();
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    bool isMobile = screenWidth <= 600;
     return Container(
-      padding: EdgeInsets.all(16),
+      width: isMobile ? screenWidth : screenWidth / 2,
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: KThemeColors.primary,
+        borderRadius: KThemeBorderRadius.borderRadius_md,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          TextField(
+          TextFormField(
             controller: titleController,
-            decoration: InputDecoration(labelText: 'Title'),
+            decoration: const InputDecoration(labelText: 'Title'),
           ),
           const SizedBox(height: 8),
-          TextField(
-            controller: slotController,
-            decoration: InputDecoration(labelText: 'Slot'),
+          TextFormField(
+            controller: descriptionController,
+            decoration: const InputDecoration(labelText: 'Description'),
+            maxLines: null,
           ),
           const SizedBox(height: 8),
-          TextField(
+          TextFormField(
             controller: tagsController,
             decoration:
                 const InputDecoration(labelText: 'Tags (comma-separated)'),
@@ -44,48 +61,77 @@ class _AddRecordState extends State<AddRecord> {
             readOnly: true,
             decoration: const InputDecoration(
               labelText: 'Date',
-              suffixIcon: Icon(Icons.calendar_month),
+              suffixIcon: Icon(
+                Icons.calendar_month,
+              ),
             ),
             onTap: () => _selectDate(context),
             controller: TextEditingController(
-              text: selectedDate.toString(),
+              text: TimeService.standardDate(selectedDate),
             ),
           ),
           const SizedBox(height: 8),
-          TextFormField(
-            readOnly: true,
-            decoration: const InputDecoration(
-              labelText: 'Time',
-              suffixIcon: Icon(Icons.access_time),
-            ),
-            onTap: () => _selectTime(context),
-            controller: TextEditingController(
-              text: selectedTime.format(context),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: TextFormField(
+                  readOnly: true,
+                  decoration: const InputDecoration(
+                    labelText: 'From',
+                    suffixIcon: Icon(Icons.access_time),
+                  ),
+                  onTap: () => _selectFrom(context),
+                  controller: TextEditingController(
+                    text: selectedFrom.format(context),
+                  ),
+                ),
+              ),
+              const SizedBox(
+                width: 20,
+              ),
+              Expanded(
+                child: TextFormField(
+                  readOnly: true,
+                  decoration: const InputDecoration(
+                    labelText: 'To',
+                    suffixIcon: Icon(Icons.access_time),
+                  ),
+                  onTap: () => _selectTo(context),
+                  controller: TextEditingController(
+                    text: selectedTo.format(context),
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 20),
           ElevatedButton(
-            onPressed: () {
+            style: ElevatedButton.styleFrom(
+              backgroundColor: KThemeColors.secondary,
+              foregroundColor: KThemeColors.primary,
+            ),
+            onPressed: () async {
               Record record = Record(
-                title: titleController.text,
-                dateTime: DateTime(
+                titleArr: titleController.text.split(' '),
+                date: DateTime(
                   selectedDate.year,
                   selectedDate.month,
                   selectedDate.day,
-                  selectedTime.hour,
-                  selectedTime.minute,
                 ),
-                slot: slotController.text,
-                bgColor: ColorUtils.getRandomColor(),
+                from: TimeService.timeOfDayToString(selectedFrom),
+                to: TimeService.timeOfDayToString(selectedTo),
+                description: descriptionController.text,
+                priority: Record.assignPriority(
+                    TimeService.timeOfDayToString(selectedFrom),
+                    TimeService.timeOfDayToString(selectedTo)),
                 tags: tagsController.text.split(','),
               );
-
-              print(record);
-
-              FirebaseUtils.setData(record);
+              await FirebaseService.setData(record);
+              widget.updateRecords(await FirebaseService.fetchAllRecords());
               Navigator.pop(context);
             },
-            child: Text('Add Record'),
+            child: const Text('Add Record'),
           ),
         ],
       ),
@@ -107,15 +153,50 @@ class _AddRecordState extends State<AddRecord> {
     }
   }
 
-  Future<void> _selectTime(BuildContext context) async {
+  Future<void> _selectFrom(BuildContext context) async {
     TimeOfDay? pickedTime = await showTimePicker(
       context: context,
-      initialTime: selectedTime,
+      initialTime: selectedFrom,
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            primaryColor: KThemeColors.primary,
+            hintColor: KThemeColors.secondary,
+            buttonTheme:
+                const ButtonThemeData(textTheme: ButtonTextTheme.primary),
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (pickedTime != null) {
       setState(() {
-        selectedTime = pickedTime;
+        selectedFrom = pickedTime;
+      });
+    }
+  }
+
+  Future<void> _selectTo(BuildContext context) async {
+    TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialTime: selectedFrom,
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            primaryColor: KThemeColors.primary,
+            hintColor: KThemeColors.secondary,
+            buttonTheme:
+                const ButtonThemeData(textTheme: ButtonTextTheme.primary),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedTime != null) {
+      setState(() {
+        selectedTo = pickedTime;
       });
     }
   }
@@ -123,7 +204,7 @@ class _AddRecordState extends State<AddRecord> {
   @override
   void dispose() {
     titleController.dispose();
-    slotController.dispose();
+    descriptionController.dispose();
     super.dispose();
   }
 }

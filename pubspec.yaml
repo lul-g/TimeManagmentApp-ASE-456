@@ -21,13 +21,13 @@ dependencies:
   firebase_auth: ^4.10.0
   cloud_firestore: ^4.9.2
   table_calendar: ^3.0.9
-  timeline_tile: ^2.0.0
-  flutter_datetime_picker: ^1.5.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
+  mockito: ^5.0.15
+  cloud_firestore: ^4.13.2
 
 flutter:
   uses-material-design: true

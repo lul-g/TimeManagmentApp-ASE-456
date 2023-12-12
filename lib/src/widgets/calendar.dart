@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:time_app/src/models/record.dart';
-import 'package:time_app/src/services/FirebaseUtils.dart';
+import 'package:time_app/src/services/FirebaseService.dart';
+import 'package:time_app/src/services/TimeService.dart';
 import 'package:time_app/src/utils/constants.dart';
 
 class CalendarTableView extends StatefulWidget {
-  final Function updateRecordList;
-  const CalendarTableView({required this.updateRecordList, super.key});
+  final Function updateRecords;
+  const CalendarTableView({required this.updateRecords, super.key});
 
   @override
   State<CalendarTableView> createState() => _CalendarTableViewState();
@@ -25,8 +26,9 @@ class _CalendarTableViewState extends State<CalendarTableView> {
           : MediaQuery.of(context).size.width / 2,
       height: isMobile ? 360 : 350,
       decoration: BoxDecoration(
-          color: KThemeColors.primary,
-          borderRadius: KThemeBorderRadius.borderRadius_md),
+        color: KThemeColors.primary,
+        borderRadius: KThemeBorderRadius.borderRadius_md,
+      ),
       child: TableCalendar(
         firstDay: DateTime.utc(2010, 10, 16),
         lastDay: DateTime.utc(2030, 10, 16),
@@ -52,7 +54,9 @@ class _CalendarTableViewState extends State<CalendarTableView> {
       _selectedDay = selectedDay;
       _focusedDay = focusedDay;
     });
-    List<Record> records = await FirebaseUtils.fetchRecordsByDate(selectedDay);
-    widget.updateRecordList(records);
+    var standardDate = TimeService.standardDate(selectedDay);
+    print('from calendar $standardDate');
+    List<Record> records = await FirebaseService.getData("date:$standardDate");
+    widget.updateRecords(records);
   }
 }
