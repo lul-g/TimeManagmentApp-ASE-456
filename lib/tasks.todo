@@ -1,0 +1,41 @@
+v1:
+  ✔ Code Refractoring @done (12/7/2023, 5:28:32 PM)
+  ✔ Code smell @done (12/7/2023, 5:28:34 PM)
+v2:
+  ✔ Change fetchBydate -> fetchByDateRange @done (12/8/2023, 1:58:28 AM)
+  ✔ Remove bgColor attribute from records and use priority to set colors @done (12/7/2023, 5:28:41 PM)
+  ✔ red: high, yellow: mid, blue: low @done (12/7/2023, 5:28:42 PM)
+  ✔ Use string enum mapping for priority (high, mid, low) @done (12/7/2023, 5:28:43 PM)
+  ✔ add priority check when user puts input @done (12/7/2023, 5:28:46 PM)
+  ✔ add description instead of slot @done (12/7/2023, 5:28:48 PM)
+  ✔ delete functionality @done (12/8/2023, 3:36:18 AM)
+  ✔ order by priority @done (12/8/2023, 3:02:24 AM)
+  ✔ use white/black bg with d/t border color on cards @done (12/8/2023, 3:02:28 AM)
+  ✔ from-to implememt @done (12/10/2023, 4:22:26 AM)
+
+
+general tasks:
+  ✔ handle invalid records during add❗ @done (12/11/2023, 11:15:03 PM)
+  ✔ refactor timservice class to use DateFormat instead since it can take any type of format. @done (12/10/2023, 6:17:14 AM)
+  ✔ app description modal how to search @done (12/10/2023, 5:10:49 AM)
+  ✔ priority based on time-range-not relative to other records @done (12/10/2023, 5:18:22 AM)
+
+  BUGS:
+  ✔ Search by title - not workign @done (12/7/2023, 8:40:54 PM)
+  ✔ search by date not working @done (12/7/2023, 8:41:00 PM)
+  ✔ search by date-range not working @done (12/8/2023, 3:04:39 AM)
+  ✘ Search by tags - on #tag-1, #tag-2 where tag-1 is in record-1 and tag-2 is in record-2 only, record-1 is returned. @cancelled (12/11/2023, 9:01:58 PM)
+  ✔ search by date not working ❗ @done (12/11/2023, 7:43:57 PM)
+  ✔ search by date range not working ❗ @done (12/11/2023, 7:49:14 PM)
+  ✔ order by priority should not refetch data, it should order the existing records by priority @done (12/11/2023, 7:58:41 PM)
+  ✔ order by date-time not working @done (12/11/2023, 8:44:57 PM)
+
+test:
+  ✘ firbaseservice @cancelled (12/11/2023, 8:44:48 PM)
+  ✔ colorservice @done (12/10/2023, 5:57:40 AM)
+  ✔ timeservice @done (12/10/2023, 6:26:28 AM)
+  ✔ stringext @done (12/10/2023, 5:57:52 AM)
+  ✔ record @done (12/11/2023, 9:01:42 PM)
+
+Input test:
+  ✔ RANGE:12/01/2023,  12/05/2023 @done (12/11/2023, 9:01:50 PM)

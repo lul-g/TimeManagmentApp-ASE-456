@@ -1,0 +1,1 @@
+cloc --json --exclude-dir=progress --out=progress/$(date +%Y-%m-%d).json .

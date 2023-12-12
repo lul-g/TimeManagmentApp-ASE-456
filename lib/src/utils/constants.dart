@@ -51,10 +51,11 @@ class KThemeColors {
 
   static const Color blueLight = Color(0xFFEDF4FE);
   static const Color blue = Color(0xFFE1EDFC);
-  static const Color blueDark = Color(0xFFC0D3F8);
+  static const Color blueDark = Color.fromARGB(255, 133, 171, 247);
 
   static const Color primary = Color(0xFF1B1D20);
   static const Color secondary = Color(0xFFFFFFFF);
+  static const Color teritiary = Color(0XFFF2F4F6);
 }
 
 class KThemeBorders {
@@ -63,7 +64,7 @@ class KThemeBorders {
     width: 0.2,
   );
   static final Border border_md = Border.all(
-    color: Colors.black,
+    color: Colors.white,
     width: 0.8,
   );
   static final Border border_lg = Border.all(

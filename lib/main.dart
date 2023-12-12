@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:time_app/src/models/record.dart';
-import 'package:time_app/src/screens/page1.dart';
-import 'package:time_app/src/screens/page2.dart';
-import 'package:time_app/src/services/FirebaseUtils.dart';
+import 'package:time_app/src/services/FirebaseService.dart';
 import 'package:time_app/src/utils/constants.dart';
 import 'package:time_app/src/widgets/app_bar.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -24,8 +22,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark()
-          .copyWith(scaffoldBackgroundColor: KThemeColors.secondary),
+      theme: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: KThemeColors.secondary,
+        dividerTheme: const DividerThemeData(color: KThemeColors.secondary),
+      ),
       home: const MyHomePage(),
     );
   }
@@ -40,17 +40,17 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   bool isLoading = false;
-  String _searchParam = '';
   late List<Record> _records;
 
+  List<Record> _getRecords() => _records;
+// range: 12-16-2023, 12-23-2023
   @override
   void initState() {
     super.initState();
     startLoading();
-    // FirebaseUtils.deleteAllDocumentsInCollection('Records');
-    // FirebaseUtils.seedDatabaseWithRecords();
+    // FirebaseService.deleteAllRecords();
+    // FirebaseService.seedDatabaseWithRecords();
     initRecordsList();
-    // getData();
   }
 
   Future<void> initRecordsList() async {
@@ -58,8 +58,7 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       isLoading = true;
     });
-    List<Record> records =
-        await FirebaseUtils.fetchRecordsByDate(DateTime.now());
+    List<Record> records = await FirebaseService.fetchAllRecords();
     updateRecordList(records);
     setState(() {
       isLoading = false;
@@ -83,12 +82,6 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void updateSearchParam(String val) {
-    setState(() {
-      _searchParam = val;
-    });
-  }
-
   void updateRecordList(List<Record> records) {
     startLoading();
     setState(() {
@@ -99,36 +92,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void onSearch(String searchText) async {
     startLoading();
-    List<Record> records =
-        await FirebaseUtils.getData(searchText: searchText.toLowerCase());
-    updateRecordList(records);
-    setState(() {
-      _searchParam = searchText;
-    });
-  }
-
-  void searchTask() async {
-    setState(() {
-      isLoading = true;
-    });
-  }
-
-  void navigateToPage1() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => Page1()),
-    );
-  }
-
-  void navigateToPage2() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => Page2()),
-    );
-  }
-
-  void navigateToEditPage() {
-    print('Navigate to edit page');
+    List<Record> filteredRecords = searchText == ''
+        ? await FirebaseService.fetchAllRecords()
+        : await FirebaseService.getData(searchText.toLowerCase());
+    updateRecordList(filteredRecords);
   }
 
   @override
@@ -136,18 +103,32 @@ class _MyHomePageState extends State<MyHomePage> {
     double screenWidth = MediaQuery.of(context).size.width;
     bool isMobile = screenWidth <= 600;
     return Scaffold(
+      backgroundColor: KThemeColors.primary,
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(200.0),
-        child: CustomAppBar(
-          onSearch: onSearch,
-          updateRecordList: updateRecordList,
-          initRecordsList: initRecordsList,
+        preferredSize: isMobile
+            ? const Size.fromHeight(120.0)
+            : const Size.fromHeight(80.0),
+        child: Align(
+          child: SizedBox(
+            width: isMobile ? screenWidth : 600,
+            child: AppBar(
+              leadingWidth: 10,
+              backgroundColor: KThemeColors.secondary,
+              shadowColor: Colors.transparent,
+              flexibleSpace: CustomAppBar(
+                onSearch: onSearch,
+                updateRecordList: updateRecordList,
+                getRecords: _getRecords,
+              ),
+            ),
+          ),
         ),
       ),
       body: Center(
         child: Container(
-          width: isMobile ? MediaQuery.of(context).size.width : 600,
-          padding: const EdgeInsets.symmetric(horizontal: 15),
+          width: isMobile ? screenWidth : 600,
+          color: KThemeColors.secondary,
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
           child: CustomScrollView(
             slivers: [
               const SliverToBoxAdapter(
@@ -186,7 +167,9 @@ class _MyHomePageState extends State<MyHomePage> {
                           delegate: SliverChildBuilderDelegate(
                             (_, index) => Container(
                               margin: const EdgeInsets.symmetric(vertical: 8),
-                              child: RecordCard(record: _records[index]),
+                              child: RecordCard(
+                                  record: _records[index],
+                                  updateRecordList: updateRecordList),
                             ),
                             childCount: _records.length,
                           ),
